@@ -17,7 +17,8 @@
         "title": "Sneaky Reader",
         "decorations": false,
         "shadow": false,
-        "transparent": true
+        "transparent": true,
+        "alwaysOnTop": true
       }
     ],
     "security": {

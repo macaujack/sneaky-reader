@@ -15,6 +15,9 @@ pub fn run() {
             let (config, is_first_start) = config::read_config();
             let window = app.get_window("main").expect("Cannot get main window");
             window
+                .set_ignore_cursor_events(true)
+                .expect("Cannot ignore cursor events");
+            window
                 .set_size(Size::Physical(PhysicalSize {
                     width: config.size.width,
                     height: config.size.height,
