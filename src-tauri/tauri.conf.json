@@ -11,16 +11,6 @@
   },
   "app": {
     "macOSPrivateApi": true,
-    "windows": [
-      {
-        "label": "main",
-        "title": "Sneaky Reader",
-        "decorations": false,
-        "shadow": false,
-        "transparent": true,
-        "alwaysOnTop": true
-      }
-    ],
     "security": {
       "csp": null
     }
