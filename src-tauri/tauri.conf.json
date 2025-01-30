@@ -10,9 +10,14 @@
     "frontendDist": "../dist"
   },
   "app": {
+    "macOSPrivateApi": true,
     "windows": [
       {
-        "title": "sneaky-reader",
+        "label": "main",
+        "title": "Sneaky Reader",
+        "decorations": false,
+        "shadow": false,
+        "transparent": true,
         "width": 800,
         "height": 600
       }
