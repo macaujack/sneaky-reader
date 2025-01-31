@@ -1,20 +1,24 @@
 use serde::{Deserialize, Serialize};
-use tauri::{PhysicalPosition, PhysicalSize};
+use tauri::{LogicalPosition, LogicalSize};
 
 pub const CONFIG_ROOT_DIR: &str = "sneaky-reader";
 pub const CONFIG_FILENAME: &str = "config.json";
 
 #[derive(Debug, Serialize, Deserialize)]
 pub struct Config {
-    pub position: PhysicalPosition<i32>,
-    pub size: PhysicalSize<u32>,
+    pub position_reader: LogicalPosition<f64>,
+    pub size_reader: LogicalSize<f64>,
+    pub position_settings: LogicalPosition<f64>,
+    pub size_settings: LogicalSize<f64>,
 }
 
 impl Default for Config {
     fn default() -> Self {
         Self {
-            position: PhysicalPosition::new(0, 0),
-            size: PhysicalSize::new(1200, 900),
+            position_reader: LogicalPosition::new(80.0, 60.0),
+            size_reader: LogicalSize::new(800.0, 600.0),
+            position_settings: LogicalPosition::new(900.0, 150.0),
+            size_settings: LogicalSize::new(800.0, 600.0),
         }
     }
 }

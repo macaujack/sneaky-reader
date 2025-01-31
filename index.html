@@ -3,10 +3,17 @@
   <head>
     <meta charset="UTF-8" />
     <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+    <script type="module" src="/src/reader/main.ts" defer></script>
+    <link rel="stylesheet" href="/src/reader/styles.css" />
   </head>
 
   <body>
-    <div id="root"></div>
-    <script type="module" src="/src/reader/main.tsx"></script>
+    <div id="content-container">
+      <div class="content">Hello from the other side</div>
+    </div>
+
+    <div id="overlay">
+      <div id="drag-region" data-tauri-drag-region></div>
+    </div>
   </body>
 </html>

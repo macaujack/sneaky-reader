@@ -1,5 +1,6 @@
 import {
   Box,
+  CssBaseline,
   Drawer,
   List,
   ListItem,
@@ -49,6 +50,8 @@ export default function App() {
 
   return (
     <Box sx={{ display: "flex" }}>
+      <CssBaseline />
+
       <Box sx={{ width: drawerWidth }}>
         <Drawer variant="permanent" anchor="left" sx={{ width: drawerWidth }}>
           <List sx={{ width: drawerWidth }}>
@@ -67,7 +70,9 @@ export default function App() {
         </Drawer>
       </Box>
 
-      <Box component="main">{mainComponent}</Box>
+      <Box component="main" sx={{ width: "100%" }}>
+        {mainComponent}
+      </Box>
     </Box>
   );
 }
