@@ -2,6 +2,7 @@ import { listen } from "@tauri-apps/api/event";
 
 let contentContainer: HTMLDivElement | null = null;
 
+document.addEventListener("keydown", (event) => event.preventDefault());
 document.addEventListener("contextmenu", (event) => event.preventDefault());
 
 window.addEventListener("DOMContentLoaded", () => {
@@ -14,9 +15,13 @@ listen("start-changing-styles", startChangingStyles);
 listen("end-changing-styles", endChangingStyles);
 
 function startChangingStyles() {
-  contentContainer!.style.outlineWidth = "3px";
+  const style = contentContainer!.style;
+  style.outlineWidth = "3px";
+  style.visibility = "visible";
 }
 
 function endChangingStyles() {
-  contentContainer!.style.outlineWidth = "0px";
+  const style = contentContainer!.style;
+  style.outlineWidth = "0px";
+  style.visibility = "hidden";
 }

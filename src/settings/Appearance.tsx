@@ -1,16 +1,24 @@
 import { Box, List } from "@mui/material";
-import { invoke } from "@tauri-apps/api/core";
 import SettingSwitch from "./components/SettingSwitch";
+import { useEffect } from "react";
+import { invokeCommand } from "../util";
 
 export default function Appearance() {
   const onUnlockReadingViewChange = (checked: boolean) => {
     if (checked) {
-      callCommandWithNoParamNoReturn("start_changing_styles");
+      invokeCommand("start_changing_styles");
     } else {
-      callCommandWithNoParamNoReturn("end_changing_styles");
-      callCommandWithNoParamNoReturn("persist_position_size");
+      invokeCommand("end_changing_styles");
+      invokeCommand("persist_position_size");
     }
   };
+
+  useEffect(() => {
+    return () => {
+      invokeCommand("end_changing_styles");
+      invokeCommand("persist_position_size");
+    };
+  }, []);
 
   return (
     <Box>
@@ -21,12 +29,4 @@ export default function Appearance() {
       </List>
     </Box>
   );
-}
-
-async function callCommandWithNoParamNoReturn(command: string) {
-  try {
-    await invoke(command);
-  } catch (e) {
-    console.error(e);
-  }
 }

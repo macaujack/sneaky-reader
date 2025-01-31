@@ -4,21 +4,60 @@ use tauri::{LogicalPosition, LogicalSize};
 pub const CONFIG_ROOT_DIR: &str = "sneaky-reader";
 pub const CONFIG_FILENAME: &str = "config.json";
 
-#[derive(Debug, Serialize, Deserialize)]
+#[derive(Debug, Clone, Serialize, Deserialize, Default)]
 pub struct Config {
+    pub appearance: Appearance,
+    pub control: Control,
+}
+
+#[derive(Debug, Clone, Serialize, Deserialize)]
+pub struct Appearance {
     pub position_reader: LogicalPosition<f64>,
     pub size_reader: LogicalSize<f64>,
     pub position_settings: LogicalPosition<f64>,
     pub size_settings: LogicalSize<f64>,
 }
 
-impl Default for Config {
+#[derive(Debug, Serialize, Deserialize, PartialEq, Eq, Clone, Copy, Default)]
+pub enum ControlBasicMode {
+    Simple,
+    Safe,
+    #[default]
+    VerySafe,
+}
+
+#[derive(Debug, Clone, Serialize, Deserialize)]
+pub struct ControlBasic {
+    pub mode: ControlBasicMode,
+    pub show_hide: String,
+    pub next_page: String,
+    pub prev_page: String,
+}
+
+#[derive(Debug, Clone, Serialize, Deserialize, Default)]
+pub struct Control {
+    pub is_advanced: bool,
+    pub basic: ControlBasic,
+}
+
+impl Default for Appearance {
     fn default() -> Self {
         Self {
             position_reader: LogicalPosition::new(80.0, 60.0),
             size_reader: LogicalSize::new(800.0, 600.0),
             position_settings: LogicalPosition::new(900.0, 150.0),
             size_settings: LogicalSize::new(800.0, 600.0),
+        }
+    }
+}
+
+impl Default for ControlBasic {
+    fn default() -> Self {
+        Self {
+            mode: Default::default(),
+            show_hide: String::from("ControlLeft"),
+            next_page: String::from("AltLeft"),
+            prev_page: String::from("ShiftLeft"),
         }
     }
 }
