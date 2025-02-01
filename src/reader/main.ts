@@ -11,17 +11,32 @@ window.addEventListener("DOMContentLoaded", () => {
   ) as HTMLDivElement;
 });
 
-listen("start-changing-styles", startChangingStyles);
-listen("end-changing-styles", endChangingStyles);
-
-function startChangingStyles() {
+listen("start-changing-styles", () => {
   const style = contentContainer!.style;
   style.outlineWidth = "3px";
   style.visibility = "visible";
-}
+});
 
-function endChangingStyles() {
+listen("end-changing-styles", () => {
   const style = contentContainer!.style;
   style.outlineWidth = "0px";
   style.visibility = "hidden";
-}
+});
+
+listen("show", () => {
+  contentContainer!.style.visibility = "visible";
+});
+
+listen("hide", () => {
+  contentContainer!.style.visibility = "hidden";
+});
+
+listen("next-page", () => {
+  // TODO: Complete this
+  console.log("next-page received");
+});
+
+listen("prev-page", () => {
+  // TODO: Complete this
+  console.log("prev-page received");
+});

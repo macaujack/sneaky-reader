@@ -1,3 +1,4 @@
+use crate::listener::KeyButton;
 use serde::{Deserialize, Serialize};
 use tauri::{LogicalPosition, LogicalSize};
 
@@ -29,9 +30,9 @@ pub enum ControlBasicMode {
 #[derive(Debug, Clone, Serialize, Deserialize)]
 pub struct ControlBasic {
     pub mode: ControlBasicMode,
-    pub show_hide: String,
-    pub next_page: String,
-    pub prev_page: String,
+    pub show_hide: KeyButton,
+    pub next_page: KeyButton,
+    pub prev_page: KeyButton,
 }
 
 #[derive(Debug, Clone, Serialize, Deserialize, Default)]
@@ -55,9 +56,9 @@ impl Default for ControlBasic {
     fn default() -> Self {
         Self {
             mode: Default::default(),
-            show_hide: String::from("ControlLeft"),
-            next_page: String::from("AltLeft"),
-            prev_page: String::from("ShiftLeft"),
+            show_hide: KeyButton::ControlLeft,
+            next_page: KeyButton::AltLeft,
+            prev_page: KeyButton::ShiftLeft,
         }
     }
 }

@@ -1,9 +1,13 @@
-use super::config;
+use super::{config, fsm, listener};
 use std::sync::Mutex;
 use tauri::{AppHandle, Emitter, Manager, WebviewWindow};
 
 #[tauri::command]
 pub fn start_changing_styles(app: AppHandle) {
+    let fsm = app.state::<Mutex<fsm::Fsm>>();
+    let mut fsm = fsm.lock().unwrap();
+    fsm.reset_and_pause();
+
     let window_reader = get_reader_window(&app);
 
     window_reader
@@ -17,6 +21,10 @@ pub fn start_changing_styles(app: AppHandle) {
 
 #[tauri::command]
 pub fn end_changing_styles(app: AppHandle) {
+    let fsm = app.state::<Mutex<fsm::Fsm>>();
+    let mut fsm = fsm.lock().unwrap();
+    fsm.continue_from_pause();
+
     end_changing_styles_aux(&app);
 }
 
@@ -73,23 +81,37 @@ pub fn persist_position_size_aux(app: &AppHandle) {
 
 #[tauri::command]
 pub fn persist_basic_control(app: AppHandle, key: String, value: String) {
-    let app_state = app.state::<Mutex<config::Config>>();
-    let mut config = app_state.lock().unwrap();
+    let config = app.state::<Mutex<config::Config>>();
+    let mut config = config.lock().unwrap();
     config.control.is_advanced = false;
     let basic_control = &mut config.control.basic;
+
+    let fsm = app.state::<Mutex<fsm::Fsm>>();
+    let mut fsm = fsm.lock().unwrap();
 
     if key == "mode" {
         let mode: config::ControlBasicMode = serde_json::from_str(&format!("\"{value}\""))
             .expect("Cannot deserialize value to mode");
+        fsm.set_show_hide_with_basic_control(mode, basic_control.show_hide);
         basic_control.mode = mode;
     } else {
-        let field = match key.as_str() {
-            "show_hide" => &mut basic_control.show_hide,
-            "next_page" => &mut basic_control.next_page,
-            "prev_page" => &mut basic_control.prev_page,
+        let key_button: listener::KeyButton = serde_json::from_str(&format!("\"{value}\""))
+            .expect("Cannot deserialize value to KeyButton");
+        match key.as_str() {
+            "show_hide" => {
+                fsm.set_show_hide_with_basic_control(basic_control.mode, key_button);
+                basic_control.show_hide = key_button;
+            }
+            "next_page" => {
+                fsm.set_next_page_with_basic_control(key_button);
+                basic_control.next_page = key_button;
+            }
+            "prev_page" => {
+                fsm.set_prev_page_with_basic_control(key_button);
+                basic_control.prev_page = key_button;
+            }
             _ => panic!("Unknown key"),
         };
-        *field = value;
     }
 
     config::write_config(&config);

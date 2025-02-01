@@ -25,6 +25,7 @@ interface ModeMenuItem {
   tooltip: string;
 }
 
+// TODO: Use more user-friendly tooltip
 const modeMenuItems: ModeMenuItem[] = [
   {
     value: "VerySafe",

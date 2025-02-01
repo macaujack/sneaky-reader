@@ -23,6 +23,19 @@ const listItemSx: SxProps<Theme> = {
   justifyContent: "space-between",
 };
 
+const validKeyButtons = new Set<string>([
+  "ControlLeft",
+  "AltLeft",
+  "ShiftLeft",
+
+  "MouseLeft",
+  "MouseMiddle",
+  "MouseRight",
+
+  "WheelUp",
+  "WheelDown",
+]);
+
 export default function SettingShortcutSingleKey({
   contentSx,
   code,
@@ -34,22 +47,24 @@ export default function SettingShortcutSingleKey({
   const theme = useTheme();
 
   const keyEventHandler = (event: KeyboardEvent<HTMLDivElement>) => {
-    setModalOpen(false);
-    if (event.code !== "Escape") {
-      onChangeCode(event.code);
+    if (!validKeyButtons.has(event.code)) {
+      return;
     }
+
+    setModalOpen(false);
+    onChangeCode(event.code);
   };
   const mouseEventHandler = (event: MouseEvent<HTMLDivElement>) => {
     let name = "";
     switch (event.button) {
       case 0:
-        name = "MouseL";
+        name = "MouseLeft";
         break;
       case 1:
-        name = "MouseM";
+        name = "MouseMiddle";
         break;
       case 2:
-        name = "MouseR";
+        name = "MouseRight";
         break;
       case 3:
         name = "Mouse4";
@@ -59,6 +74,9 @@ export default function SettingShortcutSingleKey({
         break;
       default:
         name = "MouseUnknown";
+    }
+    if (!validKeyButtons.has(name)) {
+      return;
     }
     setModalOpen(false);
     onChangeCode(name);
@@ -71,19 +89,20 @@ export default function SettingShortcutSingleKey({
     ];
     deltas.sort((a, b) => (a[0] === b[0] ? a[1] - b[1] : b[0] - a[0]));
 
-    let delta, axis;
+    let direction;
     if (deltas[0][1] === 0) {
-      delta = event.deltaY;
-      axis = "y";
+      direction = event.deltaY > 0 ? "Up" : "Down";
     } else if (deltas[0][1] === 1) {
-      delta = event.deltaX;
-      axis = "x";
+      direction = event.deltaX > 0 ? "Right" : "Left";
     } else {
-      delta = event.deltaZ;
-      axis = "z";
+      direction = event.deltaZ > 0 ? "Top" : "Below";
+    }
+    const name = `Wheel${direction}`;
+    if (!validKeyButtons.has(name)) {
+      return;
     }
     setModalOpen(false);
-    onChangeCode(`Wheel${delta >= 0 ? "+" : "-"}${axis}`);
+    onChangeCode(name);
   };
 
   return (

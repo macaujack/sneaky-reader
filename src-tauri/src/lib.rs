@@ -7,15 +7,39 @@ use tauri::{
 
 mod command;
 mod config;
+mod fsm;
+mod listener;
 
 #[cfg_attr(mobile, tauri::mobile_entry_point)]
 pub fn run() {
-    tauri::Builder::default()
+    let mut builder = tauri::Builder::default();
+    #[cfg(target_os = "windows")]
+    {
+        builder = builder.device_event_filter(tauri::DeviceEventFilter::Always);
+    }
+    builder
         .plugin(tauri_plugin_opener::init())
         .setup(|app| {
+            // First read the config so that app panics at the very beginning
             let (config, is_first_start) = config::read_config();
-            let appearance = &config.appearance;
 
+            #[cfg(target_os = "macos")]
+            {
+                // TODO: Verify if this works
+                app.set_activation_policy(tauri::ActivationPolicy::Accessory);
+            }
+
+            // Initialize FSM and global input listener
+            let fsm = {
+                let mut fsm = fsm::Fsm::new();
+                fsm.set_with_control(&config.control);
+                fsm
+            };
+            app.manage(Mutex::new(fsm));
+            let mut listener = listener::Listener::new(app.handle().clone());
+            std::thread::spawn(|| rdev::listen(move |event| listener.callback(event)));
+
+            let appearance = &config.appearance;
             let webview_url_reader = WebviewUrl::App("index.html".into());
             let mut window_builder_reader =
                 tauri::WebviewWindowBuilder::new(app, "main", webview_url_reader)
@@ -29,10 +53,6 @@ pub fn run() {
             #[cfg(not(target_os = "macos"))]
             {
                 window_builder_reader = window_builder_reader.skip_taskbar(true);
-            }
-            #[cfg(target_os = "macos")]
-            {
-                app.set_activation_policy(tauri::ActivationPolicy::Accessory);
             }
             let window_reader = window_builder_reader.build().unwrap();
 
@@ -146,6 +166,11 @@ fn open_or_create_settings_window(app: &AppHandle) {
                     command::persist_position_size_aux(&app);
                 }
             });
+
+            #[cfg(debug_assertions)]
+            {
+                window_settings.open_devtools();
+            }
         }
     };
 }
