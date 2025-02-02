@@ -1,18 +1,21 @@
-use std::sync::Mutex;
+use std::{collections::HashMap, sync::Mutex};
 use tauri::{
     menu::{Menu, MenuItem},
     tray::{MouseButton, MouseButtonState, TrayIconBuilder, TrayIconEvent},
-    AppHandle, Manager, WebviewUrl, WebviewWindowBuilder, WindowEvent,
+    AppHandle, Emitter, Manager, WebviewUrl, WebviewWindowBuilder, WindowEvent,
 };
 
 mod command;
 mod config;
 mod fsm;
+mod library;
 mod listener;
+
+pub const DATA_ROOT_DIR: &str = "sneaky-reader";
 
 #[cfg_attr(mobile, tauri::mobile_entry_point)]
 pub fn run() {
-    let mut builder = tauri::Builder::default();
+    let mut builder = tauri::Builder::default().plugin(tauri_plugin_dialog::init());
     #[cfg(target_os = "windows")]
     {
         builder = builder.device_event_filter(tauri::DeviceEventFilter::Always);
@@ -20,8 +23,9 @@ pub fn run() {
     builder
         .plugin(tauri_plugin_opener::init())
         .setup(|app| {
-            // First read the config so that app panics at the very beginning
+            // First read the config and books so that app panics at the very beginning
             let (config, is_first_start) = config::read_config();
+            let books = library::get_books_from_disk();
 
             #[cfg(target_os = "macos")]
             {
@@ -60,11 +64,51 @@ pub fn run() {
                 .set_ignore_cursor_events(true)
                 .expect("Cannot ignore cursor events");
 
+            let window_reader_clone = window_reader.clone();
+            window_reader.on_window_event(move |event| {
+                if let WindowEvent::Resized(_) = event {
+                    window_reader_clone
+                        .emit("refresh-content", ())
+                        .expect("Cannot emit refresh-content");
+                }
+            });
+
             app.manage(Mutex::new(config));
 
             #[cfg(debug_assertions)]
             {
                 window_reader.open_devtools();
+            }
+
+            let mut title_to_index = HashMap::new();
+            for (i, book) in books.iter().enumerate() {
+                title_to_index.insert(book.title.clone(), i);
+            }
+            let old_progress = books
+                .first()
+                .map(|book| book.progress)
+                .unwrap_or(usize::MAX);
+            app.manage(Mutex::new(library::BooksAux {
+                books,
+                title_to_index,
+                old_progress,
+            }));
+
+            {
+                let app = app.handle().clone();
+                tauri::async_runtime::spawn(async move {
+                    let mut interval = tokio::time::interval(std::time::Duration::from_secs(30));
+                    loop {
+                        interval.tick().await;
+
+                        let books_aux = app.state::<Mutex<library::BooksAux>>();
+                        let mut books_aux = books_aux.lock().unwrap();
+                        if books_aux.books[0].progress != books_aux.old_progress {
+                            library::write_books_to_disk(&books_aux.books);
+                            books_aux.old_progress = books_aux.books[0].progress;
+                        }
+                    }
+                });
             }
 
             if is_first_start {
@@ -121,6 +165,10 @@ pub fn run() {
             command::persist_position_size,
             command::persist_basic_control,
             command::get_config,
+            command::get_books,
+            command::change_book,
+            command::get_first_reader_book_info,
+            command::update_progress,
         ])
         .run(tauri::generate_context!())
         .expect("error while running tauri application");

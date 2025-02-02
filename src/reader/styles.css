@@ -13,13 +13,34 @@ body {
   align-items: center;
 }
 
-#content-container {
+#content-container-real,
+#content-container-dry-run {
+  position: absolute;
   width: calc(100% - 8px);
   height: calc(100% - 8px);
+  top: 50%;
+  left: 50%;
+  transform: translate(-50%, -50%);
+  visibility: hidden;
+  overflow: hidden;
+}
+
+#content-container-real {
   outline-style: solid;
   outline-color: red;
   outline-width: 0px;
-  visibility: hidden;
+}
+
+#content-real > p:first-child,
+#content-dry-run > p:first-child {
+  margin: 0;
+  padding: 0;
+}
+
+#content-real > p:not(:first-child),
+#content-dry-run > p:not(:first-child) {
+  margin: 0.5em 0 0;
+  padding: 0;
 }
 
 #overlay {

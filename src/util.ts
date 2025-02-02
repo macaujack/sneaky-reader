@@ -16,6 +16,20 @@ export interface ControlBasic {
   prev_page: string;
 }
 
+export interface Book {
+  title: string;
+  summary: string;
+  total_character_count: number;
+  progress: number;
+  last_read_time: number;
+}
+
+export interface ReaderBookInfo {
+  title: string;
+  content: string;
+  progress: number;
+}
+
 export async function invokeCommand<T = unknown>(
   cmd: string,
   args?: InvokeArgs,

@@ -1,8 +1,7 @@
-use crate::listener::KeyButton;
+use crate::{listener::KeyButton, DATA_ROOT_DIR};
 use serde::{Deserialize, Serialize};
 use tauri::{LogicalPosition, LogicalSize};
 
-pub const CONFIG_ROOT_DIR: &str = "sneaky-reader";
 pub const CONFIG_FILENAME: &str = "config.json";
 
 #[derive(Debug, Clone, Serialize, Deserialize, Default)]
@@ -66,12 +65,12 @@ impl Default for ControlBasic {
 /// Read the configuration from the config file, or create a new one if it doesn't exist.
 /// Returns the configuration and a boolean indicating whether the configuration is newly created.
 pub fn read_config() -> (Config, bool) {
-    let config_dir = dirs::config_dir().unwrap().join(CONFIG_ROOT_DIR);
-    if !config_dir.exists() {
-        std::fs::create_dir_all(&config_dir).unwrap();
+    let data_dir = dirs::data_dir().unwrap().join(DATA_ROOT_DIR);
+    if !data_dir.exists() {
+        std::fs::create_dir_all(&data_dir).unwrap();
     }
 
-    let config_file = config_dir.join(CONFIG_FILENAME);
+    let config_file = data_dir.join(CONFIG_FILENAME);
     if config_file.exists() {
         let file = std::fs::File::open(config_file).expect("Cannot open config file");
         let reader = std::io::BufReader::new(file);
@@ -87,8 +86,8 @@ pub fn read_config() -> (Config, bool) {
 }
 
 pub fn write_config(config: &Config) {
-    let config_dir = dirs::config_dir().unwrap().join(CONFIG_ROOT_DIR);
-    let config_file = config_dir.join(CONFIG_FILENAME);
+    let data_dir = dirs::data_dir().unwrap().join(DATA_ROOT_DIR);
+    let config_file = data_dir.join(CONFIG_FILENAME);
     let file = std::fs::File::create(&config_file).expect("Cannot write config file");
     let writer = std::io::BufWriter::new(file);
     serde_json::to_writer(writer, config).expect("Error serializing config");

@@ -14,7 +14,9 @@ import Control from "./Control";
 import {
   FormatColorTextOutlined,
   KeyboardAltOutlined,
+  LibraryBooksOutlined,
 } from "@mui/icons-material";
+import Library from "./Library";
 
 interface DrawerItem {
   name: string;
@@ -30,6 +32,10 @@ const drawerItems: DrawerItem[] = [
     name: "Control",
     icon: <KeyboardAltOutlined />,
   },
+  {
+    name: "Library",
+    icon: <LibraryBooksOutlined />,
+  },
 ];
 
 const drawerWidth = 200;
@@ -43,6 +49,8 @@ export default function App() {
         return <Appearance />;
       case "Control":
         return <Control />;
+      case "Library":
+        return <Library />;
       default:
         return null;
     }

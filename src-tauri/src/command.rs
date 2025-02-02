@@ -1,5 +1,5 @@
-use super::{config, fsm, listener};
-use std::sync::Mutex;
+use super::{config, fsm, library, listener};
+use std::{ops::DerefMut, sync::Mutex};
 use tauri::{AppHandle, Emitter, Manager, WebviewWindow};
 
 #[tauri::command]
@@ -122,6 +122,65 @@ pub fn get_config(app: AppHandle) -> config::Config {
     let app_state = app.state::<Mutex<config::Config>>();
     let config = app_state.lock().unwrap();
     config.clone()
+}
+
+#[tauri::command]
+pub fn get_books(app: AppHandle) -> Vec<library::Book> {
+    let books_aux = app.state::<Mutex<library::BooksAux>>();
+    let books_aux = books_aux.lock().unwrap();
+    books_aux.books.clone()
+}
+
+#[tauri::command]
+pub fn change_book(app: AppHandle, title: String) -> Vec<library::Book> {
+    let books_aux = app.state::<Mutex<library::BooksAux>>();
+    let mut books_aux = books_aux.lock().unwrap();
+    let library::BooksAux {
+        books,
+        title_to_index,
+        old_progress,
+    } = books_aux.deref_mut();
+
+    let original_index = *title_to_index.get(&title).expect("Book not found");
+    if original_index == 0 {
+        return books.clone();
+    }
+
+    books[0..=original_index].rotate_right(1);
+    *title_to_index.get_mut(&title).unwrap() = 0;
+    #[allow(clippy::needless_range_loop)]
+    for i in 1..=original_index {
+        *title_to_index.get_mut(&books[i].title).unwrap() = i;
+    }
+    *old_progress = books[0].progress;
+
+    library::write_books_to_disk(books);
+
+    let window_reader = get_reader_window(&app);
+    let reader_book_info = library::ReaderBookInfo::new(&books[0]);
+    window_reader
+        .emit("book-changed", reader_book_info)
+        .expect("Cannot emit book-changed");
+
+    books.clone()
+}
+
+#[tauri::command]
+pub fn get_first_reader_book_info(app: AppHandle) -> Option<library::ReaderBookInfo> {
+    let books_aux = app.state::<Mutex<library::BooksAux>>();
+    let books_aux = books_aux.lock().unwrap();
+    let books = &books_aux.books;
+    books.first().map(library::ReaderBookInfo::new)
+}
+
+#[tauri::command]
+pub fn update_progress(app: AppHandle, title: String, progress: usize) {
+    let books_aux = app.state::<Mutex<library::BooksAux>>();
+    let mut books_aux = books_aux.lock().unwrap();
+    let index = *books_aux.title_to_index.get(&title).unwrap();
+    books_aux.books[index].progress = progress;
+
+    // Note here we intentionally don't write the books to disk.
 }
 
 fn get_reader_window(app: &AppHandle) -> WebviewWindow {
