@@ -183,6 +183,31 @@ pub fn update_progress(app: AppHandle, title: String, progress: usize) {
     // Note here we intentionally don't write the books to disk.
 }
 
+#[tauri::command]
+pub fn import_books(app: AppHandle, book_paths: Vec<String>) -> library::ImportBooksResult {
+    let books_aux = app.state::<Mutex<library::BooksAux>>();
+    let mut books_aux = books_aux.lock().unwrap();
+
+    let library::BooksAux {
+        books,
+        title_to_index,
+        ..
+    } = books_aux.deref_mut();
+
+    let import_books_result =
+        library::import_and_standardize_external_books(&book_paths, title_to_index);
+
+    books.splice(1..1, import_books_result.successful.clone());
+
+    for (i, book) in books.iter().enumerate() {
+        title_to_index.insert(book.title.clone(), i);
+    }
+
+    library::write_books_to_disk(books);
+
+    import_books_result
+}
+
 fn get_reader_window(app: &AppHandle) -> WebviewWindow {
     app.get_webview_window("main")
         .expect("Cannot get main window")

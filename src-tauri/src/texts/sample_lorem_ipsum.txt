@@ -1,15 +1,8 @@
 Lorem ipsum dolor sit amet, consectetur adipiscing elit. Vivamus lacinia odio vitae vestibulum vestibulum. Cras venenatis euismod malesuada.
-
 你好，欢迎：Lorem Ipsum 只是打印和排版行业的虚拟文本。这个文本有一些奇特之处，吸引了许多人使用。使用不同的语言能够展示我们生活中的多样性和美丽。
-
 Bonjour et bienvenue：Ceci est un exemple de texte multilingue. Le Lorem Ipsum est simplement un faux texte employé dans la composition et la mise en page avant impression. Il a survécu non seulement à cinq siècles, mais aussi au saut dans la composition électronique.
-
 こんにちは、ようこそ：この例文は多言語テキストの例です。Lorem Ipsum は単なるダミーテキストです。印刷および組版業界で何世紀にもわたって使用されてきました。
-
 ¡Hola y bienvenidos! Este texto es un ejemplo de cómo se puede combinar varios idiomas en un solo artículo. El Lorem Ipsum ha sido el texto falso estándar de la industria desde el siglo XVI, cuando un impresor desconocido tomó una galera de tipos y la mezcló para hacer un libro de muestras de tipos.
-
 안녕하세요, 환영합니다: 이것은 여러 언어를 포함한 예제 텍스트입니다. Lorem Ipsum은 단지 인쇄 및 조판 산업의 더미 텍스트일 뿐입니다. 이 텍스트는 몇 세기 동안 사용되어 왔습니다.
-
 Hallo und willkommen: Dies ist ein Beispieltext, der mehrere Sprachen verwendet. Lorem Ipsum ist seit dem 16. Jahrhundert der Standard-Dummy-Text der Industrie. Es hat die Jahrhunderte und den Sprung in die elektronische Satztechnik überdauert.
-
 Привет и добро пожаловать: Это пример текста, включающего несколько языков. Lorem Ipsum является стандартным фиктивным текстом в печатной и издательской индустрии с 16 века. Этот текст был использован для демонстрации макетов и типографики.

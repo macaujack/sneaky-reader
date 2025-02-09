@@ -104,7 +104,7 @@ listen("prev-page", () => {
   binarySearchAndUpdateContent(
     (len) =>
       bookInfo!.content.substring(bookInfo!.progress - len, bookInfo!.progress),
-    bookInfo.content.length
+    bookInfo.progress
   );
   bookInfo.progress -= displayContentLength;
   reportProgress();
@@ -150,6 +150,7 @@ function binarySearchAndUpdateContent(
 
   while (canFit(lenToStr(right))) {
     if (right === maxLen) {
+      displayContentLength = maxLen;
       showContentInParagraphs(contentReal!, lenToStr(maxLen));
       return;
     }

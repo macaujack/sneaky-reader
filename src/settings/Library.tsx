@@ -8,7 +8,7 @@ import {
   Typography,
 } from "@mui/material";
 import { open } from "@tauri-apps/plugin-dialog";
-import { Book, invokeCommand } from "../util";
+import { Book, ImportBooksResult, invokeCommand } from "../util";
 import { useEffect, useState } from "react";
 
 export default function Library() {
@@ -27,8 +27,8 @@ export default function Library() {
   }, []);
 
   const onSelectFiles = async () => {
-    const files = await open({
-      title: "Choose TXT books to upload",
+    const bookPaths = await open({
+      title: "Choose TXT books to import",
       multiple: true,
       directory: false,
       filters: [
@@ -38,7 +38,32 @@ export default function Library() {
         },
       ],
     });
-    console.log(files);
+
+    if (bookPaths === null || bookPaths.length === 0) {
+      return;
+    }
+
+    const importBooksResult = await invokeCommand<ImportBooksResult>(
+      "import_books",
+      { bookPaths }
+    );
+
+    if (typeof importBooksResult === "undefined") {
+      console.error("Not received import books result");
+      return;
+    }
+
+    setBooks((books) => {
+      if (importBooksResult.successful.length === 0) {
+        return books;
+      }
+      if (books.length === 0) {
+        return importBooksResult.successful;
+      }
+      return [books[0], ...importBooksResult.successful, ...books.slice(1)];
+    });
+
+    // TODO: Handle import error
   };
 
   const createOnBookClick = (bookTitle: string) => async () => {

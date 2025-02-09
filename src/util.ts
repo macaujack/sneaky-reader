@@ -30,6 +30,11 @@ export interface ReaderBookInfo {
   progress: number;
 }
 
+export interface ImportBooksResult {
+  successful: Book[];
+  failed: string[];
+}
+
 export async function invokeCommand<T = unknown>(
   cmd: string,
   args?: InvokeArgs,

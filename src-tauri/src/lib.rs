@@ -132,6 +132,11 @@ pub fn run() {
                     }
                     "quit" => {
                         command::persist_position_size_aux(app);
+
+                        let books_aux = app.state::<Mutex<library::BooksAux>>();
+                        let books_aux = books_aux.lock().unwrap();
+                        library::write_books_to_disk(&books_aux.books);
+
                         app.exit(0);
                     }
                     _ => {}
@@ -169,6 +174,7 @@ pub fn run() {
             command::change_book,
             command::get_first_reader_book_info,
             command::update_progress,
+            command::import_books,
         ])
         .run(tauri::generate_context!())
         .expect("error while running tauri application");
