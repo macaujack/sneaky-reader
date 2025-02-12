@@ -17,6 +17,7 @@ import {
   LibraryBooksOutlined,
 } from "@mui/icons-material";
 import Library from "./Library";
+import { useTranslation } from "react-i18next";
 
 interface DrawerItem {
   name: string;
@@ -25,15 +26,15 @@ interface DrawerItem {
 
 const drawerItems: DrawerItem[] = [
   {
-    name: "Appearance",
+    name: "appearance",
     icon: <FormatColorTextOutlined />,
   },
   {
-    name: "Control",
+    name: "control",
     icon: <KeyboardAltOutlined />,
   },
   {
-    name: "Library",
+    name: "library",
     icon: <LibraryBooksOutlined />,
   },
 ];
@@ -41,15 +42,16 @@ const drawerItems: DrawerItem[] = [
 const drawerWidth = 200;
 
 export default function App() {
-  const [selectedItem, setSelectedItem] = useState("Appearance");
+  const { t } = useTranslation();
+  const [selectedItem, setSelectedItem] = useState("appearance");
 
   const mainComponent = useMemo(() => {
     switch (selectedItem) {
-      case "Appearance":
+      case "appearance":
         return <Appearance />;
-      case "Control":
+      case "control":
         return <Control />;
-      case "Library":
+      case "library":
         return <Library />;
       default:
         return null;
@@ -70,7 +72,7 @@ export default function App() {
                   onClick={() => setSelectedItem(item.name)}
                 >
                   <ListItemIcon>{item.icon}</ListItemIcon>
-                  <ListItemText primary={item.name} />
+                  <ListItemText primary={t(item.name)} />
                 </ListItemButton>
               </ListItem>
             ))}

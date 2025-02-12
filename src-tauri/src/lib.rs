@@ -198,7 +198,7 @@ fn open_or_create_settings_window(app: &AppHandle) {
 
             let webview_url_settings = WebviewUrl::App("index-settings.html".into());
             let window_settings = WebviewWindowBuilder::new(app, "settings", webview_url_settings)
-                .title("Settings")
+                .title("")
                 .inner_size(
                     appearance.size_settings.width,
                     appearance.size_settings.height,

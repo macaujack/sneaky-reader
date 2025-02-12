@@ -13,6 +13,7 @@ import {
 import SettingShortcutSingleKey from "./components/SettingShortcutSingleKey";
 import { useEffect, useState } from "react";
 import { Config, invokeCommand } from "../util";
+import { useTranslation } from "react-i18next";
 
 const listItemSx: SxProps<Theme> = {
   display: "flex",
@@ -29,22 +30,23 @@ interface ModeMenuItem {
 const modeMenuItems: ModeMenuItem[] = [
   {
     value: "VerySafe",
-    text: "Very safe",
-    tooltip: "very safe!!",
+    text: "verySafeOption",
+    tooltip: "verySafeExplain",
   },
   {
     value: "Safe",
-    text: "Safe",
-    tooltip: "safe!!",
+    text: "safeOption",
+    tooltip: "safeExplain",
   },
   {
     value: "Simple",
-    text: "Simple",
-    tooltip: "simple!!",
+    text: "simpleOption",
+    tooltip: "simpleExplain",
   },
 ];
 
 export default function Control() {
+  const { t } = useTranslation();
   const [ready, setReady] = useState(false);
   const [modeValue, setModeValue] = useState("VerySafe");
   const [codeShowHide, setCodeShowHide] = useState("ControlLeft");
@@ -94,12 +96,12 @@ export default function Control() {
     <Box>
       <List>
         <ListItem sx={listItemSx}>
-          <ListItemText>Show/Hide mode</ListItemText>
+          <ListItemText>{t("showHideMode")}</ListItemText>
           <Select value={modeValue} onChange={onModeChange}>
             {modeMenuItems.map((item) => (
               <MenuItem key={item.value} value={item.value}>
-                <Tooltip placement="left" title={item.tooltip}>
-                  <Box sx={{ width: "100%" }}>{item.text}</Box>
+                <Tooltip placement="left" title={t(item.tooltip)}>
+                  <Box sx={{ width: "100%" }}>{t(item.text)}</Box>
                 </Tooltip>
               </MenuItem>
             ))}
@@ -110,21 +112,21 @@ export default function Control() {
           code={codeShowHide}
           onChangeCode={createOnChangeCode("show_hide", setCodeShowHide)}
         >
-          Show/Hide
+          {t("showHide")}
         </SettingShortcutSingleKey>
         <SettingShortcutSingleKey
           code={codeNextPage}
           allowWheel
           onChangeCode={createOnChangeCode("next_page", setCodeNextPage)}
         >
-          Next page
+          {t("nextPage")}
         </SettingShortcutSingleKey>
         <SettingShortcutSingleKey
           code={codePrevPage}
           allowWheel
           onChangeCode={createOnChangeCode("prev_page", setCodePrevPage)}
         >
-          Previous page
+          {t("prevPage")}
         </SettingShortcutSingleKey>
       </List>
     </Box>

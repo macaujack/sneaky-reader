@@ -10,8 +10,10 @@ import {
 import { open } from "@tauri-apps/plugin-dialog";
 import { Book, ImportBooksResult, invokeCommand } from "../util";
 import { useEffect, useState } from "react";
+import { useTranslation } from "react-i18next";
 
 export default function Library() {
+  const { t } = useTranslation();
   const [ready, setReady] = useState(false);
   const [books, setBooks] = useState([] as Book[]);
 
@@ -28,12 +30,12 @@ export default function Library() {
 
   const onSelectFiles = async () => {
     const bookPaths = await open({
-      title: "Choose TXT books to import",
+      title: t("importTxtBooks"),
       multiple: true,
       directory: false,
       filters: [
         {
-          name: "Only .txt files",
+          name: t("plainTxtFiles"),
           extensions: ["txt"],
         },
       ],
@@ -92,7 +94,7 @@ export default function Library() {
         }}
       >
         <Button variant="contained" onClick={onSelectFiles}>
-          Import
+          {t("import")}
         </Button>
       </Box>
 

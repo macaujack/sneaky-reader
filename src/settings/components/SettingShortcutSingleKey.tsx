@@ -9,6 +9,7 @@ import {
   useTheme,
 } from "@mui/material";
 import { KeyboardEvent, MouseEvent, useState, WheelEvent } from "react";
+import { useTranslation } from "react-i18next";
 
 interface Props {
   contentSx?: SxProps<Theme>;
@@ -43,6 +44,7 @@ export default function SettingShortcutSingleKey({
   allowWheel,
   children,
 }: Props) {
+  const { t } = useTranslation();
   const [modalOpen, setModalOpen] = useState(false);
   const theme = useTheme();
 
@@ -135,8 +137,8 @@ export default function SettingShortcutSingleKey({
             bgcolor: theme.palette.background.default,
           }}
         >
-          <Box>Press a key to set</Box>
-          <Box>Press "ESC" to cancel</Box>
+          <Box>{t("pressAKeyToSet")}</Box>
+          <Box>{t("pressEscToCancel")}</Box>
         </DialogContent>
       </Dialog>
     </ListItem>

@@ -2,8 +2,11 @@ import { Box, List } from "@mui/material";
 import SettingSwitch from "./components/SettingSwitch";
 import { useEffect } from "react";
 import { invokeCommand } from "../util";
+import { useTranslation } from "react-i18next";
 
 export default function Appearance() {
+  const { t } = useTranslation();
+
   const onUnlockReadingViewChange = (checked: boolean) => {
     if (checked) {
       invokeCommand("start_changing_styles");
@@ -24,7 +27,7 @@ export default function Appearance() {
     <Box>
       <List>
         <SettingSwitch onChange={onUnlockReadingViewChange}>
-          Unlock reading view
+          {t("adjustReadingWindow")}
         </SettingSwitch>
       </List>
     </Box>
