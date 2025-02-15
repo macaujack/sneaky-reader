@@ -1,5 +1,10 @@
 import { listen } from "@tauri-apps/api/event";
-import { invokeCommand, ReaderBookInfo } from "../util";
+import {
+  Config,
+  invokeCommand,
+  preventBrowserDefault,
+  ReaderBookInfo,
+} from "../util";
 
 const BINARY_SEARCH_START_LENGTH = 512;
 
@@ -11,8 +16,7 @@ let contentDryRun: HTMLDivElement | null = null;
 let bookInfo: ReaderBookInfo | null = null;
 let displayContentLength: number | null = null;
 
-document.addEventListener("keydown", (event) => event.preventDefault());
-document.addEventListener("contextmenu", (event) => event.preventDefault());
+preventBrowserDefault();
 
 window.addEventListener("DOMContentLoaded", async () => {
   contentContainerReal = document.getElementById(
@@ -31,8 +35,19 @@ window.addEventListener("DOMContentLoaded", async () => {
     console.error("Error calling 'get_first_reader_book_info'");
     return;
   }
-
   bookInfo = temBookInfo;
+
+  const config = await invokeCommand<Config>("get_config");
+  if (typeof config === "undefined") {
+    console.error("Error calling 'get_config'");
+    return;
+  }
+
+  contentReal.style.fontSize = `${config.appearance.text_size}px`;
+  contentDryRun.style.fontSize = `${config.appearance.text_size}px`;
+  contentReal.style.color = config.appearance.text_color;
+  contentDryRun.style.color = config.appearance.text_color;
+
   refreshContent();
 });
 
@@ -116,6 +131,27 @@ listen<ReaderBookInfo>("book-changed", (event) => {
 });
 
 listen("refresh-content", refreshContent);
+
+listen<number>("text-size-changed", (event) => {
+  if (!contentReal || !contentDryRun) {
+    console.warn("DOM content not loaded");
+    return;
+  }
+  const textSize = `${event.payload}px`;
+  contentReal.style.fontSize = textSize;
+  contentDryRun.style.fontSize = textSize;
+  refreshContent();
+});
+
+listen<string>("text-color-changed", (event) => {
+  if (!contentReal || !contentDryRun) {
+    console.warn("DOM content not loaded");
+    return;
+  }
+  const textColor = event.payload;
+  contentReal.style.color = textColor;
+  contentDryRun.style.color = textColor;
+});
 
 function refreshContent(): void {
   binarySearchAndUpdateContent(

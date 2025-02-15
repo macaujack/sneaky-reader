@@ -131,7 +131,7 @@ pub fn run() {
                         open_or_create_settings_window(app);
                     }
                     "quit" => {
-                        command::persist_position_size_aux(app);
+                        command::persist_appearance_aux(app);
 
                         let books_aux = app.state::<Mutex<library::BooksAux>>();
                         let books_aux = books_aux.lock().unwrap();
@@ -167,7 +167,7 @@ pub fn run() {
         .invoke_handler(tauri::generate_handler![
             command::start_changing_styles,
             command::end_changing_styles,
-            command::persist_position_size,
+            command::persist_appearance,
             command::persist_basic_control,
             command::get_config,
             command::get_books,
@@ -175,6 +175,8 @@ pub fn run() {
             command::get_first_reader_book_info,
             command::update_progress,
             command::import_books,
+            command::update_text_size,
+            command::update_text_color,
         ])
         .run(tauri::generate_context!())
         .expect("error while running tauri application");
@@ -217,7 +219,7 @@ fn open_or_create_settings_window(app: &AppHandle) {
             window_settings.on_window_event(move |event| {
                 if let WindowEvent::CloseRequested { .. } = event {
                     command::end_changing_styles_aux(&app);
-                    command::persist_position_size_aux(&app);
+                    command::persist_appearance_aux(&app);
                 }
             });
 

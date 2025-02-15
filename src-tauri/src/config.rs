@@ -16,6 +16,9 @@ pub struct Appearance {
     pub size_reader: LogicalSize<f64>,
     pub position_settings: LogicalPosition<f64>,
     pub size_settings: LogicalSize<f64>,
+
+    pub text_size: usize,
+    pub text_color: String,
 }
 
 #[derive(Debug, Serialize, Deserialize, PartialEq, Eq, Clone, Copy, Default)]
@@ -47,6 +50,9 @@ impl Default for Appearance {
             size_reader: LogicalSize::new(800.0, 600.0),
             position_settings: LogicalPosition::new(900.0, 150.0),
             size_settings: LogicalSize::new(800.0, 600.0),
+
+            text_size: 16,
+            text_color: String::from("#1cb8c3ff"),
         }
     }
 }

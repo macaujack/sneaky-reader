@@ -26,14 +26,16 @@ impl Listener {
 
         let up_down = if matches!(
             event.event_type,
-            EventType::ButtonPress(..) | EventType::KeyPress(..)
+            EventType::ButtonRelease(..) | EventType::KeyRelease(..)
         ) {
-            UpDown::Down
-        } else {
             UpDown::Up
+        } else {
+            UpDown::Down
         };
 
-        if up_down == self.key_up_downs[key_button as usize] {
+        if up_down == self.key_up_downs[key_button as usize]
+            && !matches!(event.event_type, EventType::Wheel { .. })
+        {
             return;
         }
 

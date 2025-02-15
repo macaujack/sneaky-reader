@@ -21,16 +21,15 @@ pub fn start_changing_styles(app: AppHandle) {
 
 #[tauri::command]
 pub fn end_changing_styles(app: AppHandle) {
-    let fsm = app.state::<Mutex<fsm::Fsm>>();
-    let mut fsm = fsm.lock().unwrap();
-    fsm.continue_from_pause();
-
     end_changing_styles_aux(&app);
 }
 
 pub fn end_changing_styles_aux(app: &AppHandle) {
-    let window_reader = get_reader_window(app);
+    let fsm = app.state::<Mutex<fsm::Fsm>>();
+    let mut fsm = fsm.lock().unwrap();
+    fsm.continue_from_pause();
 
+    let window_reader = get_reader_window(app);
     window_reader
         .emit("end-changing-styles", ())
         .expect("Cannot emit end-changing-styles");
@@ -41,11 +40,11 @@ pub fn end_changing_styles_aux(app: &AppHandle) {
 }
 
 #[tauri::command]
-pub fn persist_position_size(app: AppHandle) {
-    persist_position_size_aux(&app);
+pub fn persist_appearance(app: AppHandle) {
+    persist_appearance_aux(&app);
 }
 
-pub fn persist_position_size_aux(app: &AppHandle) {
+pub fn persist_appearance_aux(app: &AppHandle) {
     let window_reader = get_reader_window(app);
     let position_reader = window_reader
         .outer_position()
@@ -206,6 +205,22 @@ pub fn import_books(app: AppHandle, book_paths: Vec<String>) -> library::ImportB
     library::write_books_to_disk(books);
 
     import_books_result
+}
+
+#[tauri::command]
+pub fn update_text_size(app: AppHandle, text_size: usize) {
+    let config = app.state::<Mutex<config::Config>>();
+    let mut config = config.lock().unwrap();
+    config.appearance.text_size = text_size;
+    config::write_config(&config);
+}
+
+#[tauri::command]
+pub fn update_text_color(app: AppHandle, text_color: String) {
+    let config = app.state::<Mutex<config::Config>>();
+    let mut config = config.lock().unwrap();
+    config.appearance.text_color = text_color;
+    config::write_config(&config);
 }
 
 fn get_reader_window(app: &AppHandle) -> WebviewWindow {
