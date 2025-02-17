@@ -175,6 +175,9 @@ pub fn run() {
             command::get_first_reader_book_info,
             command::update_progress,
             command::import_books,
+            command::new_book,
+            command::rename_book,
+            command::remove_book,
             command::update_text_size,
             command::update_text_color,
         ])

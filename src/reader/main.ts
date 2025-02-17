@@ -5,6 +5,7 @@ import {
   preventBrowserDefault,
   ReaderBookInfo,
 } from "../util";
+import { Pager } from "./pager";
 
 const BINARY_SEARCH_START_LENGTH = 512;
 
@@ -14,7 +15,7 @@ let contentReal: HTMLDivElement | null = null;
 let contentDryRun: HTMLDivElement | null = null;
 
 let bookInfo: ReaderBookInfo | null = null;
-let displayContentLength: number | null = null;
+let pager: Pager | null = null;
 
 preventBrowserDefault();
 
@@ -92,15 +93,23 @@ listen("next-page", () => {
     console.warn("Book content not initialized");
     return;
   }
-  if (displayContentLength === null || displayContentLength === 0) {
+  if (!pager) {
+    console.warn("Pager not initialized");
     return;
   }
-  if (bookInfo.progress + displayContentLength >= bookInfo.content.length) {
+  const newPageContent = pager.nextPage();
+  if (newPageContent === null) {
     return;
   }
+  showContentInParagraphs(
+    contentReal,
+    bookInfo.content.substring(
+      newPageContent.startIndex,
+      newPageContent.startIndex + newPageContent.contentLength
+    )
+  );
 
-  bookInfo.progress += displayContentLength;
-  refreshContent();
+  bookInfo.progress = newPageContent.startIndex;
   reportProgress();
 });
 
@@ -109,19 +118,23 @@ listen("prev-page", () => {
     console.warn("Book content not initialized");
     return;
   }
-  if (displayContentLength === null || displayContentLength === 0) {
+  if (!pager) {
+    console.warn("Pager not initialized");
     return;
   }
-  if (bookInfo.progress === 0) {
+  const newPageContent = pager.prevPage();
+  if (newPageContent === null) {
     return;
   }
-
-  binarySearchAndUpdateContent(
-    (len) =>
-      bookInfo!.content.substring(bookInfo!.progress - len, bookInfo!.progress),
-    bookInfo.progress
+  showContentInParagraphs(
+    contentReal,
+    bookInfo.content.substring(
+      newPageContent.startIndex,
+      newPageContent.startIndex + newPageContent.contentLength
+    )
   );
-  bookInfo.progress -= displayContentLength;
+
+  bookInfo.progress = newPageContent!.startIndex;
   reportProgress();
 });
 
@@ -154,10 +167,62 @@ listen<string>("text-color-changed", (event) => {
 });
 
 function refreshContent(): void {
-  binarySearchAndUpdateContent(
+  const bestLength = binarySearchBestLength(
     (len) =>
       bookInfo!.content.substring(bookInfo!.progress, bookInfo!.progress + len),
     bookInfo!.content.length - bookInfo!.progress
+  );
+
+  pager = new Pager(
+    bookInfo!.progress,
+    bestLength,
+    (pageContent) => {
+      if (
+        pageContent.startIndex + pageContent.contentLength >=
+        bookInfo!.content.length
+      ) {
+        return null;
+      }
+      const nextBestLength = binarySearchBestLength(
+        (len) =>
+          bookInfo!.content.substring(
+            pageContent.startIndex + pageContent.contentLength,
+            pageContent.startIndex + pageContent.contentLength + len
+          ),
+        bookInfo!.content.length -
+          pageContent.startIndex -
+          pageContent.contentLength
+      );
+      return {
+        startIndex: pageContent.startIndex + pageContent.contentLength,
+        contentLength: nextBestLength,
+      };
+    },
+    (pageContent) => {
+      if (pageContent.startIndex <= 0) {
+        return null;
+      }
+      const prevBestLength = binarySearchBestLength(
+        (len) =>
+          bookInfo!.content.substring(
+            pageContent.startIndex - len,
+            pageContent.startIndex
+          ),
+        pageContent.startIndex
+      );
+      return {
+        startIndex: pageContent.startIndex - prevBestLength,
+        contentLength: prevBestLength,
+      };
+    }
+  );
+
+  showContentInParagraphs(
+    contentReal!,
+    bookInfo!.content.substring(
+      bookInfo!.progress,
+      bookInfo!.progress + bestLength
+    )
   );
 }
 
@@ -172,13 +237,12 @@ async function reportProgress(): Promise<void> {
   });
 }
 
-function binarySearchAndUpdateContent(
+function binarySearchBestLength(
   lenToStr: (len: number) => string,
   maxLen: number
-): void {
+): number {
   if (maxLen <= 0) {
-    contentReal!.replaceChildren();
-    return;
+    return -1;
   }
 
   let left = 0;
@@ -186,9 +250,7 @@ function binarySearchAndUpdateContent(
 
   while (canFit(lenToStr(right))) {
     if (right === maxLen) {
-      displayContentLength = maxLen;
-      showContentInParagraphs(contentReal!, lenToStr(maxLen));
-      return;
+      return maxLen;
     }
     left = right;
     right = Math.min(right * 2, maxLen);
@@ -204,8 +266,7 @@ function binarySearchAndUpdateContent(
     }
   }
 
-  displayContentLength = left;
-  showContentInParagraphs(contentReal!, lenToStr(left));
+  return left;
 }
 
 function canFit(content: string): boolean {

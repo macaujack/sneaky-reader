@@ -64,37 +64,17 @@ pub fn get_books_from_disk() -> Vec<Book> {
         let metadata = std::fs::File::open(metadata).expect("Cannot read metadata file");
         serde_json::from_reader(metadata).expect("Cannot deserialize from metadata file")
     } else {
-        fn write_book_content(library_dir: &Path, title: &str, content: &str) -> Book {
-            let sample_book = library_dir.join(format!("{title}.txt"));
-            let mut sample_book =
-                std::fs::File::create(sample_book).expect("Cannot create sample book");
-            sample_book
-                .write_all(content.as_bytes())
-                .expect("Cannot write sample book contents");
-
-            Book {
-                title: String::from(title),
-                summary: content.chars().take(Book::SUMMARY_LENGTH).collect(),
-                total_character_count: content.chars().count(),
-                progress: 0,
-                last_read_time: SystemTime::now()
-                    .duration_since(UNIX_EPOCH)
-                    .unwrap()
-                    .as_secs(),
-            }
-        }
-
         let books = vec![
-            write_book_content(
-                &library_dir,
-                "Lorem Ipsum",
+            write_book_with_title_content(
+                String::from("Lorem Ipsum"),
                 include_str!("texts/sample_lorem_ipsum.txt"),
-            ),
-            write_book_content(
-                &library_dir,
-                "中国劳动法",
+            )
+            .unwrap(),
+            write_book_with_title_content(
+                String::from("中国劳动法"),
                 include_str!("texts/sample_chinese.txt"),
-            ),
+            )
+            .unwrap(),
         ];
 
         write_books_to_disk(&books);
@@ -164,48 +144,32 @@ pub fn import_and_standardize_external_books(
             continue;
         }
 
-        let standardized_text = standardize_text(&buffer);
+        let standardized_text = standardize_text(&String::from_utf8_lossy(&buffer));
 
-        let standardized_file = dirs::data_dir()
-            .unwrap()
-            .join(DATA_ROOT_DIR)
-            .join(LIBRARY_DIR_NAME)
-            .join(format!("{title}.txt"));
-        let mut standardized_file = match std::fs::File::create(standardized_file) {
-            Ok(standardized_file) => standardized_file,
+        match write_book_with_title_content(title.into(), &standardized_text) {
+            Ok(book) => {
+                successful.push(book);
+            }
             Err(_) => {
                 failed.push(external_book_path.clone());
-                continue;
             }
-        };
-        if standardized_file
-            .write_all(standardized_text.as_bytes())
-            .is_err()
-        {
-            failed.push(external_book_path.clone());
-            continue;
         }
-
-        successful.push(Book {
-            title: title.into(),
-            summary: standardized_text
-                .chars()
-                .take(Book::SUMMARY_LENGTH)
-                .collect(),
-            total_character_count: standardized_text.chars().count(),
-            progress: 0,
-            last_read_time: SystemTime::now()
-                .duration_since(UNIX_EPOCH)
-                .unwrap()
-                .as_secs(),
-        });
     }
 
     ImportBooksResult { successful, failed }
 }
 
-fn standardize_text(text: &[u8]) -> String {
-    let full_content = String::from_utf8_lossy(text);
+pub fn new_and_standardize_book(
+    title: String,
+    content: String,
+    title_to_index: &HashMap<String, usize>,
+) -> Book {
+    let standardized_text = standardize_text(&content);
+    assert!(title_to_index.get(&title).is_none(), "Title already exists");
+    write_book_with_title_content(title, &standardized_text).expect("Cannot new book")
+}
+
+fn standardize_text(text: &str) -> String {
     let mut ret = String::with_capacity(1_000_000);
 
     let mut valid_line_count = 0;
@@ -213,7 +177,7 @@ fn standardize_text(text: &[u8]) -> String {
     let mut space_separated_word_count = 0;
     let mut char_count = 0;
     let mut prev_line = "";
-    let mut lines_iter = full_content.lines().map(|line| line.trim());
+    let mut lines_iter = text.lines().map(|line| line.trim());
     let lines_iter_clone = lines_iter.clone();
 
     for line in lines_iter.by_ref() {
@@ -289,6 +253,31 @@ fn standardize_text(text: &[u8]) -> String {
     ret
 }
 
+fn write_book_with_title_content(title: String, standardized_text: &str) -> std::io::Result<Book> {
+    let standardized_file = dirs::data_dir()
+        .unwrap()
+        .join(DATA_ROOT_DIR)
+        .join(LIBRARY_DIR_NAME)
+        .join(format!("{title}.txt"));
+    let mut standardized_file = std::fs::File::create(standardized_file)?;
+
+    standardized_file.write_all(standardized_text.as_bytes())?;
+
+    Ok(Book {
+        title,
+        summary: standardized_text
+            .chars()
+            .take(Book::SUMMARY_LENGTH)
+            .collect(),
+        total_character_count: standardized_text.chars().count(),
+        progress: 0,
+        last_read_time: SystemTime::now()
+            .duration_since(UNIX_EPOCH)
+            .unwrap()
+            .as_secs(),
+    })
+}
+
 #[cfg(test)]
 mod tests {
     use super::*;
@@ -301,7 +290,7 @@ mod tests {
     }
 
     fn test_with_input_output(input: &[u8], expected_output: &str) {
-        let actual_output = standardize_text(input);
+        let actual_output = standardize_text(&String::from_utf8_lossy(input));
         assert_eq!(actual_output, expected_output);
     }
 

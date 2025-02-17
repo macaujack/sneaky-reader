@@ -26,6 +26,10 @@ interface DrawerItem {
 
 const drawerItems: DrawerItem[] = [
   {
+    name: "library",
+    icon: <LibraryBooksOutlined />,
+  },
+  {
     name: "appearance",
     icon: <FormatColorTextOutlined />,
   },
@@ -33,17 +37,13 @@ const drawerItems: DrawerItem[] = [
     name: "control",
     icon: <KeyboardAltOutlined />,
   },
-  {
-    name: "library",
-    icon: <LibraryBooksOutlined />,
-  },
 ];
 
 const drawerWidth = 200;
 
 export default function App() {
   const { t } = useTranslation();
-  const [selectedItem, setSelectedItem] = useState("appearance");
+  const [selectedItem, setSelectedItem] = useState("library");
 
   const mainComponent = useMemo(() => {
     switch (selectedItem) {
@@ -59,7 +59,7 @@ export default function App() {
   }, [selectedItem]);
 
   return (
-    <Box sx={{ display: "flex" }}>
+    <Box sx={{ display: "flex", userSelect: "none" }}>
       <CssBaseline />
 
       <Box sx={{ width: drawerWidth }}>

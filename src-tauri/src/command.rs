@@ -208,6 +208,81 @@ pub fn import_books(app: AppHandle, book_paths: Vec<String>) -> library::ImportB
 }
 
 #[tauri::command]
+pub fn new_book(app: AppHandle, title: String, content: String) -> library::Book {
+    let books_aux = app.state::<Mutex<library::BooksAux>>();
+    let mut books_aux = books_aux.lock().unwrap();
+
+    let library::BooksAux {
+        books,
+        title_to_index,
+        ..
+    } = books_aux.deref_mut();
+
+    let new_book = library::new_and_standardize_book(title, content, title_to_index);
+    books.insert(1, new_book.clone());
+    title_to_index.insert(new_book.title.clone(), 1);
+    for (i, book) in books.iter().enumerate().skip(2) {
+        *title_to_index.get_mut(&book.title).unwrap() = i;
+    }
+
+    library::write_books_to_disk(books);
+    new_book
+}
+
+#[tauri::command]
+pub fn rename_book(app: AppHandle, original_title: String, new_title: String) {
+    let books_aux = app.state::<Mutex<library::BooksAux>>();
+    let mut books_aux = books_aux.lock().unwrap();
+
+    let library::BooksAux {
+        books,
+        title_to_index,
+        ..
+    } = books_aux.deref_mut();
+
+    let index = title_to_index
+        .remove(&original_title)
+        .expect("Original title not found");
+    books[index].title = new_title.clone();
+    title_to_index.insert(new_title, index);
+
+    library::write_books_to_disk(books);
+}
+
+#[tauri::command]
+pub fn remove_book(app: AppHandle, title: String) {
+    let books_aux = app.state::<Mutex<library::BooksAux>>();
+    let mut books_aux = books_aux.lock().unwrap();
+
+    let library::BooksAux {
+        books,
+        title_to_index,
+        ..
+    } = books_aux.deref_mut();
+
+    if books.len() <= 1 {
+        return;
+    }
+
+    let index = *title_to_index.get(&title).unwrap();
+    books.remove(index);
+    title_to_index.remove(&title);
+    for (i, book) in books.iter().enumerate().skip(index) {
+        *title_to_index.get_mut(&book.title).unwrap() = i;
+    }
+
+    if index == 0 {
+        let window_reader = get_reader_window(&app);
+        let reader_book_info = library::ReaderBookInfo::new(&books[0]);
+        window_reader
+            .emit("book-changed", reader_book_info)
+            .expect("Cannot emit book-changed");
+    }
+
+    library::write_books_to_disk(books);
+}
+
+#[tauri::command]
 pub fn update_text_size(app: AppHandle, text_size: usize) {
     let config = app.state::<Mutex<config::Config>>();
     let mut config = config.lock().unwrap();
