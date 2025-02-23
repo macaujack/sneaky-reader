@@ -115,6 +115,11 @@ pub fn run() {
                 open_or_create_settings_window(app.handle());
             }
 
+            app.manage(Mutex::new(listener::FrontendListenState {
+                name: String::new(),
+                allow_wheel: false,
+            }));
+
             // Create the tray icon
             // TODO: Add an icon
             let menu_item_settings =
@@ -168,7 +173,8 @@ pub fn run() {
             command::start_changing_styles,
             command::end_changing_styles,
             command::persist_appearance,
-            command::persist_basic_control,
+            command::persist_basic_control_mode,
+            command::persist_basic_control_key_button,
             command::get_config,
             command::get_books,
             command::change_book,
@@ -180,6 +186,7 @@ pub fn run() {
             command::remove_book,
             command::update_text_size,
             command::update_text_color,
+            command::update_frontend_listen_state,
         ])
         .run(tauri::generate_context!())
         .expect("error while running tauri application");

@@ -12,7 +12,7 @@ import {
 } from "@mui/material";
 import SettingShortcutSingleKey from "./components/SettingShortcutSingleKey";
 import { useEffect, useState } from "react";
-import { Config, invokeCommand } from "../util";
+import { Config, invokeCommand, KeyButton } from "../util";
 import { useTranslation } from "react-i18next";
 
 const listItemSx: SxProps<Theme> = {
@@ -49,9 +49,9 @@ export default function Control() {
   const { t } = useTranslation();
   const [ready, setReady] = useState(false);
   const [modeValue, setModeValue] = useState("VerySafe");
-  const [codeShowHide, setCodeShowHide] = useState("ControlLeft");
-  const [codeNextPage, setCodeNextPage] = useState("AltLeft");
-  const [codePrevPage, setCodePrevPage] = useState("ShiftLeft");
+  const [kbShowHide, setKbShowHide] = useState<KeyButton>("");
+  const [kbNextPage, setKbNextPage] = useState<KeyButton>("");
+  const [kbPrevPage, setKbPrevPage] = useState<KeyButton>("");
 
   useEffect(() => {
     invokeCommand<Config>("get_config").then((config) => {
@@ -63,28 +63,27 @@ export default function Control() {
       }
       const basicConfig = config.control.basic;
       setModeValue(basicConfig.mode);
-      setCodeShowHide(basicConfig.show_hide);
-      setCodeNextPage(basicConfig.next_page);
-      setCodePrevPage(basicConfig.prev_page);
+      setKbShowHide(basicConfig.show_hide);
+      setKbNextPage(basicConfig.next_page);
+      setKbPrevPage(basicConfig.prev_page);
       setReady(true);
     });
   }, []);
 
   const onModeChange = (event: SelectChangeEvent) => {
     setModeValue(event.target.value);
-    invokeCommand("persist_basic_control", {
-      key: "mode",
-      value: event.target.value,
+    invokeCommand("persist_basic_control_mode", {
+      mode: event.target.value,
     });
   };
 
   const createOnChangeCode = (
-    commandKey: string,
-    setter: (code: string) => void
+    name: string,
+    setter: (keyButton: KeyButton) => void
   ) => {
-    return (code: string) => {
-      setter(code);
-      invokeCommand("persist_basic_control", { key: commandKey, value: code });
+    return (keyButton: KeyButton) => {
+      setter(keyButton);
+      invokeCommand("persist_basic_control_key_button", { name, keyButton });
     };
   };
 
@@ -109,22 +108,25 @@ export default function Control() {
         </ListItem>
 
         <SettingShortcutSingleKey
-          code={codeShowHide}
-          onChangeCode={createOnChangeCode("show_hide", setCodeShowHide)}
+          name="show_hide"
+          keyButton={kbShowHide}
+          onChangeKeyButton={createOnChangeCode("show_hide", setKbShowHide)}
         >
           {t("showHide")}
         </SettingShortcutSingleKey>
         <SettingShortcutSingleKey
-          code={codeNextPage}
+          name="next_page"
+          keyButton={kbNextPage}
           allowWheel
-          onChangeCode={createOnChangeCode("next_page", setCodeNextPage)}
+          onChangeKeyButton={createOnChangeCode("next_page", setKbNextPage)}
         >
           {t("nextPage")}
         </SettingShortcutSingleKey>
         <SettingShortcutSingleKey
-          code={codePrevPage}
+          name="prev_page"
+          keyButton={kbPrevPage}
           allowWheel
-          onChangeCode={createOnChangeCode("prev_page", setCodePrevPage)}
+          onChangeKeyButton={createOnChangeCode("prev_page", setKbPrevPage)}
         >
           {t("prevPage")}
         </SettingShortcutSingleKey>

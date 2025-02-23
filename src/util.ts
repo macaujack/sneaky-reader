@@ -41,6 +41,28 @@ export interface ImportBooksResult {
   failed: string[];
 }
 
+export interface RdevKey {
+  Key: string | { Unknown: number } | { RawKey: RdevRawKey };
+}
+
+export type RdevRawKey =
+  | { ScanCode: number }
+  | { WinVirtualKeycode: number }
+  | { LinuxXorgKeycode: number }
+  | { LinuxConsoleKeycode: number }
+  | { MacVirtualKeycode: number };
+
+export interface RdevButton {
+  Button: string | { Unknown: number };
+}
+
+export type KeyButton = string | RdevKey | RdevButton;
+
+export interface BackendKeyButtonDownInfo {
+  name: string;
+  key_button: KeyButton;
+}
+
 const promises: Promise<void>[] = [new Promise((resolve) => resolve())];
 
 export async function invokeCommand<T = unknown>(
@@ -69,37 +91,16 @@ export async function invokeCommand<T = unknown>(
 }
 
 export function preventBrowserDefault() {
-  const preventedShortcuts = new Set(
-    [
-      ["F3", 0],
-      ["KeyF", 1],
-      ["KeyG", 1],
-      ["KeyG", 3],
-      ["F7", 0],
-      ["KeyI", 3],
-      ["F12", 0],
-      ["KeyJ", 1],
-      ["F5", 0],
-      ["F5", 1],
-      ["F5", 2],
-      ["KeyR", 1],
-      ["KeyR", 3],
-      ["KeyU", 1],
-      ["KeyO", 1],
-      ["KeyP", 1],
-      ["KeyP", 3],
-    ].map(([a, b]) => `${a}${b}`)
-  );
+  const preventedShortcuts = new Set(["F3", "F7", "F12", "F5"]);
 
   document.addEventListener("keydown", (event) => {
-    let modifiers = 0;
-    if (event.ctrlKey || event.metaKey) {
-      modifiers |= 1;
-    }
-    if (event.shiftKey) {
-      modifiers |= 2;
-    }
-    if (preventedShortcuts.has(`${event.code}${modifiers}`)) {
+    if (
+      event.ctrlKey ||
+      event.metaKey ||
+      event.altKey ||
+      event.shiftKey ||
+      preventedShortcuts.has(event.code)
+    ) {
       event.preventDefault();
     }
   });

@@ -1,4 +1,5 @@
 use crate::{listener::KeyButton, DATA_ROOT_DIR};
+use rdev::Key;
 use serde::{Deserialize, Serialize};
 use tauri::{LogicalPosition, LogicalSize};
 
@@ -61,9 +62,9 @@ impl Default for ControlBasic {
     fn default() -> Self {
         Self {
             mode: Default::default(),
-            show_hide: KeyButton::ControlLeft,
-            next_page: KeyButton::AltLeft,
-            prev_page: KeyButton::ShiftLeft,
+            show_hide: KeyButton::Key(Key::ControlLeft),
+            next_page: KeyButton::Key(Key::Alt),
+            prev_page: KeyButton::Key(Key::ShiftLeft),
         }
     }
 }

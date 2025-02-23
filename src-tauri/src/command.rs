@@ -79,7 +79,7 @@ pub fn persist_appearance_aux(app: &AppHandle) {
 }
 
 #[tauri::command]
-pub fn persist_basic_control(app: AppHandle, key: String, value: String) {
+pub fn persist_basic_control_mode(app: AppHandle, mode: config::ControlBasicMode) {
     let config = app.state::<Mutex<config::Config>>();
     let mut config = config.lock().unwrap();
     config.control.is_advanced = false;
@@ -88,30 +88,41 @@ pub fn persist_basic_control(app: AppHandle, key: String, value: String) {
     let fsm = app.state::<Mutex<fsm::Fsm>>();
     let mut fsm = fsm.lock().unwrap();
 
-    if key == "mode" {
-        let mode: config::ControlBasicMode = serde_json::from_str(&format!("\"{value}\""))
-            .expect("Cannot deserialize value to mode");
-        fsm.set_show_hide_with_basic_control(mode, basic_control.show_hide);
-        basic_control.mode = mode;
-    } else {
-        let key_button: listener::KeyButton = serde_json::from_str(&format!("\"{value}\""))
-            .expect("Cannot deserialize value to KeyButton");
-        match key.as_str() {
-            "show_hide" => {
-                fsm.set_show_hide_with_basic_control(basic_control.mode, key_button);
-                basic_control.show_hide = key_button;
-            }
-            "next_page" => {
-                fsm.set_next_page_with_basic_control(key_button);
-                basic_control.next_page = key_button;
-            }
-            "prev_page" => {
-                fsm.set_prev_page_with_basic_control(key_button);
-                basic_control.prev_page = key_button;
-            }
-            _ => panic!("Unknown key"),
-        };
-    }
+    fsm.set_show_hide_with_basic_control(mode, basic_control.show_hide);
+    basic_control.mode = mode;
+
+    config::write_config(&config);
+}
+
+#[tauri::command]
+pub fn persist_basic_control_key_button(
+    app: AppHandle,
+    name: String,
+    key_button: listener::KeyButton,
+) {
+    let config = app.state::<Mutex<config::Config>>();
+    let mut config = config.lock().unwrap();
+    config.control.is_advanced = false;
+    let basic_control = &mut config.control.basic;
+
+    let fsm = app.state::<Mutex<fsm::Fsm>>();
+    let mut fsm = fsm.lock().unwrap();
+
+    match name.as_str() {
+        "show_hide" => {
+            fsm.set_show_hide_with_basic_control(basic_control.mode, key_button);
+            basic_control.show_hide = key_button;
+        }
+        "next_page" => {
+            fsm.set_next_page_with_basic_control(key_button);
+            basic_control.next_page = key_button;
+        }
+        "prev_page" => {
+            fsm.set_prev_page_with_basic_control(key_button);
+            basic_control.prev_page = key_button;
+        }
+        _ => panic!("Unknown name"),
+    };
 
     config::write_config(&config);
 }
@@ -296,6 +307,14 @@ pub fn update_text_color(app: AppHandle, text_color: String) {
     let mut config = config.lock().unwrap();
     config.appearance.text_color = text_color;
     config::write_config(&config);
+}
+
+#[tauri::command]
+pub fn update_frontend_listen_state(app: AppHandle, name: String, allow_wheel: bool) {
+    let frontend_listen_state = app.state::<Mutex<listener::FrontendListenState>>();
+    let mut frontend_listen_state = frontend_listen_state.lock().unwrap();
+    frontend_listen_state.name = name;
+    frontend_listen_state.allow_wheel = allow_wheel;
 }
 
 fn get_reader_window(app: &AppHandle) -> WebviewWindow {
