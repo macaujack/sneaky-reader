@@ -15,13 +15,17 @@ pub const DATA_ROOT_DIR: &str = "sneaky-reader";
 
 #[cfg_attr(mobile, tauri::mobile_entry_point)]
 pub fn run() {
-    let mut builder = tauri::Builder::default().plugin(tauri_plugin_dialog::init());
+    let mut builder = tauri::Builder::default();
     #[cfg(target_os = "windows")]
     {
         builder = builder.device_event_filter(tauri::DeviceEventFilter::Always);
     }
     builder
         .plugin(tauri_plugin_opener::init())
+        .plugin(tauri_plugin_dialog::init())
+        .plugin(tauri_plugin_single_instance::init(|app, _args, _cwd| {
+            open_or_create_settings_window(app);
+        }))
         .setup(|app| {
             // First read the config and books so that app panics at the very beginning
             let (config, is_first_start) = config::read_config();
@@ -121,7 +125,6 @@ pub fn run() {
             }));
 
             // Create the tray icon
-            // TODO: Add an icon
             let menu_item_settings =
                 MenuItem::with_id(app, "settings", "Open settings", true, None::<&str>).unwrap();
             let menu_item_quit =
@@ -131,6 +134,7 @@ pub fn run() {
 
             let mut tray_builder = TrayIconBuilder::new()
                 .menu(&menu)
+                .icon(tauri::include_image!("icons/32x32.png"))
                 .on_menu_event(move |app, event| match event.id.as_ref() {
                     "settings" => {
                         open_or_create_settings_window(app);
@@ -187,6 +191,7 @@ pub fn run() {
             command::update_text_size,
             command::update_text_color,
             command::update_frontend_listen_state,
+            command::get_is_trial_version,
         ])
         .run(tauri::generate_context!())
         .expect("error while running tauri application");

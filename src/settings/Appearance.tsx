@@ -177,7 +177,7 @@ export default function Appearance() {
                 ref={paletteRef}
                 sx={{
                   position: "absolute",
-                  top: "30px",
+                  top: "60px",
                   left: "50px",
                   transform: "translateX(-100%)",
                 }}

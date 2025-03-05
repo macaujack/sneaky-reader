@@ -9,6 +9,7 @@ import {
   SxProps,
   Theme,
   Tooltip,
+  Typography,
 } from "@mui/material";
 import SettingShortcutSingleKey from "./components/SettingShortcutSingleKey";
 import { useEffect, useState } from "react";
@@ -45,7 +46,11 @@ const modeMenuItems: ModeMenuItem[] = [
   },
 ];
 
-export default function Control() {
+interface Props {
+  isTrialVersion: boolean;
+}
+
+export default function Control({ isTrialVersion }: Props) {
   const { t } = useTranslation();
   const [ready, setReady] = useState(false);
   const [modeValue, setModeValue] = useState("VerySafe");
@@ -131,6 +136,12 @@ export default function Control() {
           {t("prevPage")}
         </SettingShortcutSingleKey>
       </List>
+
+      {isTrialVersion && (
+        <Typography variant="body1" sx={{ mt: "30px", mx: "20px" }}>
+          {t("trialVersionHint")}
+        </Typography>
+      )}
     </Box>
   );
 }

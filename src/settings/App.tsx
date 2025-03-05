@@ -8,16 +8,20 @@ import {
   ListItemIcon,
   ListItemText,
 } from "@mui/material";
-import { useMemo, useState } from "react";
+import { useEffect, useMemo, useState } from "react";
 import Appearance from "./Appearance";
 import Control from "./Control";
 import {
   FormatColorTextOutlined,
+  InfoOutlined,
   KeyboardAltOutlined,
   LibraryBooksOutlined,
 } from "@mui/icons-material";
 import Library from "./Library";
 import { useTranslation } from "react-i18next";
+import About from "./About";
+import { invokeCommand } from "../util";
+import { getVersion } from "@tauri-apps/api/app";
 
 interface DrawerItem {
   name: string;
@@ -37,12 +41,19 @@ const drawerItems: DrawerItem[] = [
     name: "control",
     icon: <KeyboardAltOutlined />,
   },
+  {
+    name: "about",
+    icon: <InfoOutlined />,
+  },
 ];
 
 const drawerWidth = 200;
 
 export default function App() {
   const { t } = useTranslation();
+  const [ready, setReady] = useState(false);
+  const [isTrialVersion, setIsTrialVersion] = useState(false);
+  const [version, setVersion] = useState("");
   const [selectedItem, setSelectedItem] = useState("library");
 
   const mainComponent = useMemo(() => {
@@ -50,13 +61,44 @@ export default function App() {
       case "appearance":
         return <Appearance />;
       case "control":
-        return <Control />;
+        return <Control isTrialVersion={isTrialVersion} />;
       case "library":
         return <Library />;
+      case "about":
+        return <About isTrialVersion={isTrialVersion} version={version} />;
       default:
         return null;
     }
   }, [selectedItem]);
+
+  useEffect(() => {
+    const init = async () => {
+      const promiseGetIsTrialVersion = invokeCommand<boolean>(
+        "get_is_trial_version"
+      );
+      const promiseGetVersion = getVersion();
+      const [isTrialVersion, version] = await Promise.all([
+        promiseGetIsTrialVersion,
+        promiseGetVersion,
+      ]);
+
+      if (typeof isTrialVersion === "undefined") {
+        console.error(
+          "Not received isTrialVersion after invoking command 'get_is_trial_version'"
+        );
+        return;
+      }
+      setIsTrialVersion(isTrialVersion);
+      setVersion(version);
+      setReady(true);
+    };
+
+    init();
+  }, []);
+
+  if (!ready) {
+    return <></>;
+  }
 
   return (
     <Box sx={{ display: "flex", userSelect: "none" }}>

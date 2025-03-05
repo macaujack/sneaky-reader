@@ -25,8 +25,8 @@ pub struct Appearance {
 #[derive(Debug, Serialize, Deserialize, PartialEq, Eq, Clone, Copy, Default)]
 pub enum ControlBasicMode {
     Simple,
-    Safe,
     #[default]
+    Safe,
     VerySafe,
 }
 
@@ -48,7 +48,7 @@ impl Default for Appearance {
     fn default() -> Self {
         Self {
             position_reader: LogicalPosition::new(80.0, 60.0),
-            size_reader: LogicalSize::new(800.0, 600.0),
+            size_reader: LogicalSize::new(300.0, 400.0),
             position_settings: LogicalPosition::new(900.0, 150.0),
             size_settings: LogicalSize::new(800.0, 600.0),
 

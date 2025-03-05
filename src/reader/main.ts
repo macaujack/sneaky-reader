@@ -1,10 +1,5 @@
 import { listen } from "@tauri-apps/api/event";
-import {
-  Config,
-  invokeCommand,
-  preventBrowserDefault,
-  ReaderBookInfo,
-} from "../util";
+import { Config, invokeCommand, ReaderBookInfo } from "../util";
 import { Pager } from "./pager";
 
 const BINARY_SEARCH_START_LENGTH = 512;
@@ -17,7 +12,12 @@ let contentDryRun: HTMLDivElement | null = null;
 let bookInfo: ReaderBookInfo | null = null;
 let pager: Pager | null = null;
 
-preventBrowserDefault();
+document.addEventListener("keydown", (event) => event.preventDefault());
+document.addEventListener("keyup", (event) => event.preventDefault());
+document.addEventListener("mousedown", (event) => event.preventDefault());
+document.addEventListener("mouseup", (event) => event.preventDefault());
+document.addEventListener("wheel", (event) => event.preventDefault());
+document.addEventListener("contextmenu", (event) => event.preventDefault());
 
 window.addEventListener("DOMContentLoaded", async () => {
   contentContainerReal = document.getElementById(

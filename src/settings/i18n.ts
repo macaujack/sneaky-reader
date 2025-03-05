@@ -15,6 +15,7 @@ const resources: Record<string, { translation: Translation }> = {
       appearance: "Appearance",
       control: "Control",
       library: "Library",
+      about: "About",
       verySafeOption: "Very safe",
       verySafeExplain:
         "Double click, but don't release at the second click to show. Release to hide.",
@@ -48,6 +49,11 @@ const resources: Record<string, { translation: Translation }> = {
       rename: "Rename",
       remove: "Remove",
       cannotRemoveLastBook: "Cannot remove last book",
+      version: "Version",
+      author: "Author",
+      email: "Email",
+      trialVersionHint:
+        "You are using the trial version, which only supports left CTRL, left ALT, left SHIFT, mouse left button and mouse wheel down. To use any key/button as shortcut, please purchase the full version.",
     },
   },
   zh: {
@@ -61,6 +67,7 @@ const resources: Record<string, { translation: Translation }> = {
       appearance: "外观",
       control: "控制",
       library: "图书馆",
+      about: "关于",
       verySafeOption: "非常安全",
       verySafeExplain: "双击，但是第二次不要松开按键以显示。松开按键以隐藏。",
       safeOption: "安全",
@@ -93,6 +100,11 @@ const resources: Record<string, { translation: Translation }> = {
       rename: "重命名",
       remove: "删除",
       cannotRemoveLastBook: "无法删除最后一本图书",
+      version: "版本",
+      author: "作者",
+      email: "电邮",
+      trialVersionHint:
+        "您正在使用试用版，仅支持左 CTRL，左 ALT，左 SHIFT，鼠标左键和鼠标滚轮向下。若想使用任何键或按钮作为快捷键，请购买完整版。",
     },
   },
   "zh-Hant": {

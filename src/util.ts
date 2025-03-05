@@ -91,16 +91,41 @@ export async function invokeCommand<T = unknown>(
 }
 
 export function preventBrowserDefault() {
-  const preventedShortcuts = new Set(["F3", "F7", "F12", "F5"]);
+  const preventedShortcuts = new Set(
+    [
+      ["F3", 0],
+      ["KeyF", 1],
+      ["KeyG", 1],
+      ["KeyG", 3],
+      ["F7", 0],
+      ["KeyI", 3],
+      ["F12", 0],
+      ["KeyJ", 1],
+      ["F5", 0],
+      ["F5", 1],
+      ["F5", 2],
+      ["KeyR", 1],
+      ["KeyR", 3],
+      ["KeyU", 1],
+      ["KeyO", 1],
+      ["KeyP", 1],
+      ["KeyP", 3],
+    ].map(([a, b]) => `${a}${b}`)
+  );
 
   document.addEventListener("keydown", (event) => {
-    if (
-      event.ctrlKey ||
-      event.metaKey ||
-      event.altKey ||
-      event.shiftKey ||
-      preventedShortcuts.has(event.code)
-    ) {
+    if (event.altKey) {
+      event.preventDefault();
+      return;
+    }
+    let modifiers = 0;
+    if (event.ctrlKey || event.metaKey) {
+      modifiers |= 1;
+    }
+    if (event.shiftKey) {
+      modifiers |= 2;
+    }
+    if (preventedShortcuts.has(`${event.code}${modifiers}`)) {
       event.preventDefault();
     }
   });

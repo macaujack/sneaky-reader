@@ -317,6 +317,11 @@ pub fn update_frontend_listen_state(app: AppHandle, name: String, allow_wheel: b
     frontend_listen_state.allow_wheel = allow_wheel;
 }
 
+#[tauri::command]
+pub fn get_is_trial_version() -> bool {
+    cfg!(feature = "trial")
+}
+
 fn get_reader_window(app: &AppHandle) -> WebviewWindow {
     app.get_webview_window("main")
         .expect("Cannot get main window")
