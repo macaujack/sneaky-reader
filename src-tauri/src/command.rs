@@ -194,7 +194,10 @@ pub fn update_progress(app: AppHandle, title: String, progress: usize) {
 }
 
 #[tauri::command]
-pub fn import_books(app: AppHandle, book_paths: Vec<String>) -> library::ImportBooksResult {
+pub fn new_books(
+    app: AppHandle,
+    book_infos: Vec<library::ReaderBookInfo>,
+) -> library::NewBooksResult {
     let books_aux = app.state::<Mutex<library::BooksAux>>();
     let mut books_aux = books_aux.lock().unwrap();
 
@@ -204,40 +207,14 @@ pub fn import_books(app: AppHandle, book_paths: Vec<String>) -> library::ImportB
         ..
     } = books_aux.deref_mut();
 
-    let import_books_result =
-        library::import_and_standardize_external_books(&book_paths, title_to_index);
-
-    books.splice(1..1, import_books_result.successful.clone());
-
+    let new_books_result = library::new_and_standardize_books(&book_infos, title_to_index);
+    books.splice(1..1, new_books_result.successful.clone());
     for (i, book) in books.iter().enumerate() {
         title_to_index.insert(book.title.clone(), i);
     }
 
     library::write_books_to_disk(books);
-
-    import_books_result
-}
-
-#[tauri::command]
-pub fn new_book(app: AppHandle, title: String, content: String) -> library::Book {
-    let books_aux = app.state::<Mutex<library::BooksAux>>();
-    let mut books_aux = books_aux.lock().unwrap();
-
-    let library::BooksAux {
-        books,
-        title_to_index,
-        ..
-    } = books_aux.deref_mut();
-
-    let new_book = library::new_and_standardize_book(title, content, title_to_index);
-    books.insert(1, new_book.clone());
-    title_to_index.insert(new_book.title.clone(), 1);
-    for (i, book) in books.iter().enumerate().skip(2) {
-        *title_to_index.get_mut(&book.title).unwrap() = i;
-    }
-
-    library::write_books_to_disk(books);
-    new_book
+    new_books_result
 }
 
 #[tauri::command]

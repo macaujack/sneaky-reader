@@ -32,6 +32,7 @@ rdev = { git = "https://github.com/macaujack/rdev", rev = "457fb41017773056d73ef
 ] }
 tauri-plugin-dialog = "2"
 tokio = { version = "1.43.0", features = ["time"] }
+tauri-plugin-fs = "2"
 
 [profile.dev]
 incremental = true # Compile your binary in smaller steps.

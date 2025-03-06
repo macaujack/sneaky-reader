@@ -180,9 +180,16 @@ function keyButtonToString(keyButton: KeyButton): string {
       return `Mouse${button}`;
     }
     if (typeof (button as { Unknown: number }).Unknown === "number") {
-      // TODO: Add some buttons that are actually known
       const unknown = (button as { Unknown: number }).Unknown;
-      return `UnknownButton(${unknown})`;
+      // TODO: Add more buttons that are actually known
+      switch (unknown) {
+        case 1:
+          return "MouseButton4";
+        case 2:
+          return "MouseButton5";
+        default:
+          return `UnknownButton(${unknown})`;
+      }
     }
   }
 

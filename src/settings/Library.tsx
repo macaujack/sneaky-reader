@@ -12,10 +12,12 @@ import {
 } from "@mui/material";
 import { OverridableStringUnion } from "@mui/types";
 import { open } from "@tauri-apps/plugin-dialog";
-import { Book, ImportBooksResult, invokeCommand } from "../util";
+import { Book, invokeCommand, NewBooksResult, ReaderBookInfo } from "../util";
 import { Dispatch, SetStateAction, useEffect, useMemo, useState } from "react";
 import { useTranslation } from "react-i18next";
 import BookCard from "./components/BookCard";
+import { readFile } from "@tauri-apps/plugin-fs";
+import * as jschardet from "jschardet";
 
 type Severity = OverridableStringUnion<AlertColor, AlertPropsColorOverrides>;
 
@@ -61,7 +63,7 @@ export default function Library() {
   const onSelectFiles = async () => {
     setShowingContextMenuBookTitle("");
 
-    const bookPaths = await open({
+    const selectedBookPaths = await open({
       title: t("importTxtBooks"),
       multiple: true,
       directory: false,
@@ -73,33 +75,66 @@ export default function Library() {
       ],
     });
 
-    if (bookPaths === null || bookPaths.length === 0) {
+    if (selectedBookPaths === null || selectedBookPaths.length === 0) {
       return;
     }
 
-    const importBooksResult = await invokeCommand<ImportBooksResult>(
-      "import_books",
-      { bookPaths }
-    );
+    const failedPaths: string[] = [];
+    const readerBookInfos: ReaderBookInfo[] = [];
 
-    if (typeof importBooksResult === "undefined") {
+    for (const selectedPath of selectedBookPaths) {
+      if (bookTitles.has(selectedPath)) {
+        failedPaths.push(selectedPath);
+        continue;
+      }
+
+      const rawContentBytes = await readFile(selectedPath);
+      const binaryString = Array.from(rawContentBytes)
+        .map((b) => String.fromCharCode(b))
+        .join("");
+      const detectResult = jschardet.detect(binaryString);
+      const decoder = new TextDecoder(detectResult.encoding);
+      let content;
+      try {
+        content = decoder.decode(rawContentBytes);
+      } catch {
+        failedPaths.push(selectedPath);
+        continue;
+      }
+
+      const lastDot = selectedPath.lastIndexOf(".");
+      const lastSlash = Math.max(
+        selectedPath.lastIndexOf("/", lastDot - 1),
+        selectedPath.lastIndexOf("\\", lastDot - 1)
+      );
+      readerBookInfos.push({
+        title: selectedPath.substring(lastSlash + 1, lastDot),
+        content,
+        progress: 0,
+      });
+    }
+
+    const newBooksResult = await invokeCommand<NewBooksResult>("new_books", {
+      bookInfos: readerBookInfos,
+    });
+    if (typeof newBooksResult === "undefined") {
       console.error("Not received import books result");
       return;
     }
 
     setBooks((books) => {
-      if (importBooksResult.successful.length === 0) {
+      if (newBooksResult.successful.length === 0) {
         return books;
       }
       if (books.length === 0) {
-        return importBooksResult.successful;
+        return newBooksResult.successful;
       }
-      return [books[0], ...importBooksResult.successful, ...books.slice(1)];
+      return [books[0], ...newBooksResult.successful, ...books.slice(1)];
     });
 
     const counts = {
-      countSuccess: importBooksResult.successful.length,
-      countFail: importBooksResult.failed.length,
+      countSuccess: newBooksResult.successful.length,
+      countFail: newBooksResult.failed.length + failedPaths.length,
     };
     let i18nKey, severity: Severity;
     if (counts.countSuccess > 0 && counts.countFail > 0) {
@@ -289,11 +324,14 @@ function DialogNewBook({
       return;
     }
 
-    const book = await invokeCommand<Book>("new_book", {
-      title,
-      content,
+    const bookInfos: ReaderBookInfo[] = [{ title, content, progress: 0 }];
+    const newBooksResult = await invokeCommand<NewBooksResult>("new_books", {
+      bookInfos,
     });
-    if (typeof book === "undefined") {
+    if (
+      typeof newBooksResult === "undefined" ||
+      newBooksResult.successful.length === 0
+    ) {
       setSnackbarInfo({
         open: true,
         message: t("bookNotCreated"),
@@ -301,6 +339,7 @@ function DialogNewBook({
       });
       return;
     }
+    const book = newBooksResult.successful[0];
     setBooks((books) =>
       books.length === 0 ? [book] : [books[0], book, ...books.slice(1)]
     );

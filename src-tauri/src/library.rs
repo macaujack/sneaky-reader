@@ -1,7 +1,6 @@
 use std::{
-    collections::HashMap,
-    io::{Read, Write},
-    path::Path,
+    collections::{HashMap, HashSet},
+    io::Write,
     time::{SystemTime, UNIX_EPOCH},
 };
 
@@ -104,69 +103,40 @@ pub fn get_book_content_from_disk(title: &str) -> String {
 }
 
 #[derive(Debug, Clone, Serialize, Deserialize)]
-pub struct ImportBooksResult {
+pub struct NewBooksResult {
     pub successful: Vec<Book>,
     pub failed: Vec<String>,
 }
 
-/// Import external files. Return the paths of the files that cannot be
-/// imported due to errors (highly because of invalid Unicode).
-pub fn import_and_standardize_external_books(
-    external_book_paths: &[String],
+pub fn new_and_standardize_books(
+    book_infos: &[ReaderBookInfo],
     title_to_index: &HashMap<String, usize>,
-) -> ImportBooksResult {
+) -> NewBooksResult {
     let mut successful = Vec::new();
     let mut failed = Vec::new();
-    let mut buffer = Vec::with_capacity(1_000_000);
+    let mut successful_titles = HashSet::new();
 
-    for external_book_path in external_book_paths {
-        let title = Path::new(external_book_path)
-            .file_stem()
-            .expect("No file stem found")
-            .as_encoded_bytes();
-        let title = String::from_utf8_lossy(title);
-        if title_to_index.get(title.as_ref()).is_some() {
-            failed.push(external_book_path.clone());
+    for book_info in book_infos {
+        let ReaderBookInfo { title, content, .. } = book_info;
+
+        if title_to_index.get(title).is_some() {
+            failed.push(title.clone());
             continue;
         }
 
-        buffer.clear();
-
-        let mut external_file = match std::fs::File::open(external_book_path) {
-            Ok(file) => file,
-            Err(_) => {
-                failed.push(external_book_path.clone());
-                continue;
-            }
-        };
-        if external_file.read_to_end(&mut buffer).is_err() {
-            failed.push(external_book_path.clone());
-            continue;
-        }
-
-        let standardized_text = standardize_text(&String::from_utf8_lossy(&buffer));
-
-        match write_book_with_title_content(title.into(), &standardized_text) {
-            Ok(book) => {
+        let standardized_text = standardize_text(content);
+        match write_book_with_title_content(title.clone(), &standardized_text) {
+            Ok(book) if !successful_titles.contains(&book.title) => {
+                successful_titles.insert(book.title.clone());
                 successful.push(book);
             }
-            Err(_) => {
-                failed.push(external_book_path.clone());
+            _ => {
+                failed.push(title.clone());
             }
         }
     }
 
-    ImportBooksResult { successful, failed }
-}
-
-pub fn new_and_standardize_book(
-    title: String,
-    content: String,
-    title_to_index: &HashMap<String, usize>,
-) -> Book {
-    let standardized_text = standardize_text(&content);
-    assert!(title_to_index.get(&title).is_none(), "Title already exists");
-    write_book_with_title_content(title, &standardized_text).expect("Cannot new book")
+    NewBooksResult { successful, failed }
 }
 
 fn standardize_text(text: &str) -> String {
@@ -289,15 +259,15 @@ mod tests {
         dbg!(books);
     }
 
-    fn test_with_input_output(input: &[u8], expected_output: &str) {
-        let actual_output = standardize_text(&String::from_utf8_lossy(input));
+    fn test_with_input_output(input: &str, expected_output: &str) {
+        let actual_output = standardize_text(&input);
         assert_eq!(actual_output, expected_output);
     }
 
     #[test]
     fn test_standardize_first_format() {
         test_with_input_output(
-            include_bytes!("texts/test1_input.txt"),
+            include_str!("texts/test1_input.txt"),
             include_str!("texts/test1_output.txt"),
         );
     }
@@ -305,7 +275,7 @@ mod tests {
     #[test]
     fn test_standardize_second_format() {
         test_with_input_output(
-            include_bytes!("texts/test2_input.txt"),
+            include_str!("texts/test2_input.txt"),
             include_str!("texts/test2_output.txt"),
         );
     }
@@ -313,7 +283,7 @@ mod tests {
     #[test]
     fn test_standardize_third_format() {
         test_with_input_output(
-            include_bytes!("texts/test3_input.txt"),
+            include_str!("texts/test3_input.txt"),
             include_str!("texts/test3_output.txt"),
         );
     }
@@ -321,7 +291,7 @@ mod tests {
     #[test]
     fn test_standardize_chinese_with_leading_non_ascii_white_spaces() {
         test_with_input_output(
-            include_bytes!("texts/test4_input.txt"),
+            include_str!("texts/test4_input.txt"),
             include_str!("texts/test4_output.txt"),
         );
     }

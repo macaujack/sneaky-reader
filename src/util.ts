@@ -36,7 +36,7 @@ export interface ReaderBookInfo {
   progress: number;
 }
 
-export interface ImportBooksResult {
+export interface NewBooksResult {
   successful: Book[];
   failed: string[];
 }

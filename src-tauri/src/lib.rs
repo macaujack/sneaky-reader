@@ -4,6 +4,7 @@ use tauri::{
     tray::{MouseButton, MouseButtonState, TrayIconBuilder, TrayIconEvent},
     AppHandle, Emitter, Manager, WebviewUrl, WebviewWindowBuilder, WindowEvent,
 };
+use tauri_plugin_fs::FsExt;
 
 mod command;
 mod config;
@@ -26,10 +27,15 @@ pub fn run() {
         .plugin(tauri_plugin_single_instance::init(|app, _args, _cwd| {
             open_or_create_settings_window(app);
         }))
+        .plugin(tauri_plugin_fs::init())
         .setup(|app| {
             // First read the config and books so that app panics at the very beginning
             let (config, is_first_start) = config::read_config();
             let books = library::get_books_from_disk();
+
+            app.fs_scope()
+                .allow_directory("/", true)
+                .expect("Cannot allow system root directory");
 
             #[cfg(target_os = "macos")]
             {
@@ -184,8 +190,7 @@ pub fn run() {
             command::change_book,
             command::get_first_reader_book_info,
             command::update_progress,
-            command::import_books,
-            command::new_book,
+            command::new_books,
             command::rename_book,
             command::remove_book,
             command::update_text_size,
