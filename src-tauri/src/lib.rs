@@ -16,6 +16,7 @@ pub const DATA_ROOT_DIR: &str = "sneaky-reader";
 
 #[cfg_attr(mobile, tauri::mobile_entry_point)]
 pub fn run() {
+    #[allow(unused_mut)]
     let mut builder = tauri::Builder::default();
     #[cfg(target_os = "windows")]
     {
@@ -39,7 +40,6 @@ pub fn run() {
 
             #[cfg(target_os = "macos")]
             {
-                // TODO: Verify if this works
                 app.set_activation_policy(tauri::ActivationPolicy::Accessory);
             }
 
@@ -55,6 +55,7 @@ pub fn run() {
 
             let appearance = &config.appearance;
             let webview_url_reader = WebviewUrl::App("index.html".into());
+            #[allow(unused_mut)]
             let mut window_builder_reader =
                 tauri::WebviewWindowBuilder::new(app, "main", webview_url_reader)
                     .title("Sneaky Reader")
